@@ -31,3 +31,11 @@
 # Debug files
 *.dSYM/
 *.su
+
+
+*.pgm
+cachegrind*
+callgrind*
+erode
+*.py
+*.pyc
