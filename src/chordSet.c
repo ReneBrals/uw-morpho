@@ -71,11 +71,11 @@ int compChordX(const void* p, const void* q){
 chordSet buildChordSet (image SE){
 	chordSet chords = initChordSet();
 	chord c;
-	int x,y, chordStart,val;
-	size_t i,j;
+	int chordStart,val;
+	size_t i,j, x, y;
 
-	int centerX = (SE.W)/2;
-	int centerY = (SE.H)/2;
+	int centerX = (SE.W-1)/2;
+	int centerY = (SE.H-1)/2;
 
 	for(y = 0; y < SE.H; y++){
 

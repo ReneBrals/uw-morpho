@@ -5,17 +5,18 @@
 typedef struct {
 	unsigned char* bytes;
 	unsigned char** img;
-	int W;
-	int H;
-	int range; //Usually 255, not always though!
-	int padX;
-	int padY;
+	size_t W;
+	size_t H;
+	size_t range; //Usually 255, not always though!
+	size_t padX;
+	size_t padY;
 } image;
 
 void allocateImage(image* imp, int x, int preY, int postY);
 void freeImage(image imp);
-image readPGM(char* filename, int padX, int prePadY, int postPadY);
-void writePGM(char* filename, image im);
+void imageDiffInPlace(image f, image g);
+image readPGM(const char* filename, int padX, int prePadY, int postPadY);
+void writePGM(const char* filename, image im);
 image disk(int r);
 void printPBM(image im);
 
