@@ -36,6 +36,7 @@
 *.pgm
 cachegrind*
 callgrind*
-uw
+uw2d
+uw3d
 *.py
 *.pyc

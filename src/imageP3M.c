@@ -36,7 +36,7 @@ void allocateImage3D(image3D* imp, int x, int preY, int postY, int preZ, int pos
     }
 }
 
-void freeImage(image3D imp){
+void freeImage3D(image3D imp){
     free(imp.bytes);
     free(&(imp.img[0-imp.padY]));
 }
@@ -101,7 +101,7 @@ image3D readP3M(const char* filename, int padx, int prePadY, int postPadY, int p
     return im;
 }
 
-void writePGM(const char* filename, image3D im){
+void writeP3M(const char* filename, image3D im){
     FILE* ofp = fopen(filename,"w");
 
     size_t x,y,z;
