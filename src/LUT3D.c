@@ -105,20 +105,30 @@ void circularSwapPointers3D(LUT3D Ty){
 	}
 }
 
-void computeMinRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, int y, int z){
+void computeMinRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y, size_t z){
 	size_t i, dd;
 
-	memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
+		memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+	} else {
+		memset(Ty.arr[r][d][0], 0, Ty.X);
+	}
+
 	for(i=1;i<SE.Lnum;i++){
 		dd = SE.R[i] - SE.R[i-1];
 		simdMin(Ty.arr[r][d][i], Ty.arr[r][d][i-1], Ty.arr[r][d][i-1] + dd, Ty.X);
 	}
 }
 
-void computeMaxRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, int y, int z){
+void computeMaxRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y, size_t z){
 	size_t i, dd;
 
-	memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
+		memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+	} else {
+		memset(Ty.arr[r][d][0], 0, Ty.X);
+	}
+
 	for(i=1;i<SE.Lnum;i++){
 		dd = SE.R[i] - SE.R[i-1];
 		simdMax(Ty.arr[r][d][i] - Ty.padX, Ty.arr[r][d][i-1] - Ty.padX, Ty.arr[r][d][i-1] + dd - Ty.padX, Ty.X + Ty.padX);

@@ -10,11 +10,11 @@
 
 
 //Kill me now it hurts to live.
-void allocateImage3D(image3D* imp, int preY, int postY, int preZ, int postZ){
+void allocateImage3D(image3D* imp){
     size_t i,j;
     size_t sizeX = imp->W;
-    size_t sizeY = (imp->H + preY + postY);
-    size_t sizeZ = (imp->D + preZ + postZ);
+    size_t sizeY = imp->H;
+    size_t sizeZ = imp->D;
 
     imp->bytes = (unsigned char**)malloc(sizeZ * sizeof(char*));
 
@@ -30,18 +30,14 @@ void allocateImage3D(image3D* imp, int preY, int postY, int preZ, int postZ){
             assert(imp->img[j] != NULL);
         }
     }
-
-    if(preY > 0){
-        imp->img  = &(imp->img[preY]);
-    }
 }
 
 void freeImage3D(image3D imp){
     free(imp.bytes);
-    free(&(imp.img[0-imp.padY]));
+    free(imp.img);
 }
 
-image3D readP3M(const char* filename, int prePadY, int postPadY, int prePadZ, int postPadZ){
+image3D readP3M(const char* filename){
     unsigned char c, fileType;
     size_t i, j, k;
     image3D im;
@@ -79,9 +75,7 @@ image3D readP3M(const char* filename, int prePadY, int postPadY, int prePadZ, in
         im.range = 1;
     }
 
-    im.padY = prePadY;
-
-    allocateImage3D(&im, prePadY, postPadY, prePadZ, postPadZ);
+    allocateImage3D(&im);
 
     if(fileType == 1 || fileType == 2){
         for(i=0;i<im.D;i++){
@@ -128,7 +122,7 @@ image3D sphere(int d){
 
     float hd=d/2;
 
-    allocateImage3D(&im,0,0,0,0);
+    allocateImage3D(&im);
 
     size_t x,y, z;
     for(z=0;z<im.D;z++){

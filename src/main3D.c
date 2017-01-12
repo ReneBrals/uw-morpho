@@ -12,17 +12,13 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	image3D SEimg = readP3M(argv[3], 0, 0, 0, 0);
+	image3D SEimg = readP3M(argv[3]);
 
 	chordSet3D SE = buildChordSet3D(SEimg);
 	freeImage3D(SEimg);
     image3D g, f;
 
-	f = readP3M(argv[2],
-		0 - SE.minY,
-		SE.maxY>0?SE.maxY:0,
-		0 - SE.minZ,
-		SE.maxZ>0?SE.maxZ:0);
+	f = readP3M(argv[2]);
 
     if(!strcmp(argv[1],"erode")){
         g = erode3D(f,SE);

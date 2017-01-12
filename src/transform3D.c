@@ -58,15 +58,8 @@ image3D erode3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
-    g.padY = 0 - SE.minY;
-    g.padZ = 0 - SE.minZ;
     g.range = 255;
-    allocateImage3D(&g,
-        0 - SE.minY,
-        SE.maxY>0 ? SE.maxY : 0,
-        0 - SE.minZ,
-        SE.maxZ>0 ? SE.maxZ : 0
-        );
+    allocateImage3D(&g);
 
     for(z = 0; z < f.D; z++){
         planeErode3D(f, &g, SE, z);
@@ -79,15 +72,8 @@ image3D dilate3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
-    g.padY = 0 - SE.minY;
-    g.padZ = 0 - SE.minZ;
     g.range = 255;
-    allocateImage3D(&g,
-        0 - SE.minY,
-        SE.maxY>0 ? SE.maxY : 0,
-        0 - SE.minZ,
-        SE.maxZ>0 ? SE.maxZ : 0
-        );
+    allocateImage3D(&g);
 
     for(z = 0; z < f.D; z++){
         planeDilate3D(f, &g, SE, z);
