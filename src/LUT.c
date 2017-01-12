@@ -87,10 +87,15 @@ void circularSwapPointers(LUT Ty){
 	}
 }
 
-void computeMinRow(image f, LUT Ty, chordSet SE, int r, int y){
+void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	size_t i, d;
 
-	memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+	if(y+r >= 0 && y+r < f.H){
+		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+	} else {
+		memset(Ty.arr[r][0], 0, Ty.X);
+	}
+
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
 		simdMin(Ty.arr[r][i], Ty.arr[r][i-1], Ty.arr[r][i-1] + d, Ty.X);
@@ -119,10 +124,15 @@ LUT computeMinLUT(image f, chordSet SE){
 	return Ty;
 }
 
-void computeMaxRow(image f, LUT Ty, chordSet SE, int r, int y){
+void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	size_t i, d;
 
-	memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+	if(y+r >= 0 && y+r < f.H){
+		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+	} else {
+		memset(Ty.arr[r][0], 0, Ty.X);
+	}
+
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
 		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX, Ty.arr[r][i-1] + d - Ty.padX, Ty.X + Ty.padX);

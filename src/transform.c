@@ -30,9 +30,8 @@ image erode(image f, chordSet SE){
     image g;
     g.W = f.W;
     g.H = f.H;
-    g.padY = 0 - SE.minY;
     g.range = 255;
-    allocateImage(&g, 0 - SE.minY, SE.maxY>0?SE.maxY:0);
+    allocateImage(&g);
 
     LUT Ty = computeMinLUT(f, SE);
     lineErode(&g, Ty, SE, 0);
@@ -50,9 +49,8 @@ image dilate(image f, chordSet SE){
     image g;
     g.W = f.W;
     g.H = f.H;
-    g.padY = 0 - SE.minY;
     g.range = 255;
-    allocateImage(&g, 0 - SE.minY, SE.maxY>0?SE.maxY:0);
+    allocateImage(&g);
 
     LUT Ty = computeMaxLUT(f, SE);
     lineDilate(&g, Ty, SE, 0);

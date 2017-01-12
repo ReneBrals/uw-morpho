@@ -8,28 +8,24 @@
 
 //TODO: max range isn't always 255, CHAR does not always work
 
-void allocateImage(image* imp, int preY, int postY){
+void allocateImage(image* imp){
 
-    imp->bytes = (unsigned char*)calloc((imp->H + preY + postY) * (imp->W), sizeof(char));
-    imp->img = (unsigned char**)malloc((imp->H + preY + postY) * sizeof(char*));
+    imp->bytes = (unsigned char*)calloc((imp->H) * (imp->W), sizeof(char));
+    imp->img = (unsigned char**)malloc((imp->H) * sizeof(char*));
 
-    for(size_t i = 0; i < (imp->H + preY + postY); i++){
+    for(size_t i = 0; i < (imp->H); i++){
         imp->img[i] = (imp->bytes + i*(imp->W));
 
         assert(imp->img[i] != NULL);
-    }
-
-    if(preY > 0){
-        imp->img  = &(imp->img[preY]);
     }
 }
 
 void freeImage(image imp){
     free(imp.bytes);
-    free(&(imp.img[0-imp.padY]));
+    free(imp.img);
 }
 
-image readPGM(const char* filename, int prePadY, int postPadY){
+image readPGM(const char* filename){
     unsigned char c, fileType;
     size_t i, j, k;
     image im;
@@ -70,9 +66,7 @@ image readPGM(const char* filename, int prePadY, int postPadY){
         im.range = 1;
     }
 
-    im.padY = prePadY;
-
-    allocateImage(&im, prePadY, postPadY);
+    allocateImage(&im);
 
     if(fileType == 1 || fileType == 2){ // ASCII PBM/PGMs can be scanf'd
         for(i = 0; i < im.H; i++){
@@ -135,7 +129,7 @@ image disk(int d){
 
     float hd=d/2;
 
-    allocateImage(&im,0,0);
+    allocateImage(&im);
 
     size_t x,y;
     for(y=0;y<im.H;y++){

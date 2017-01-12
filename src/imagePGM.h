@@ -8,13 +8,12 @@ typedef struct {
 	size_t W;
 	size_t H;
 	size_t range; //Usually 255, not always though!
-	size_t padY;
 } image;
 
-void allocateImage(image* imp, int preY, int postY);
+void allocateImage(image* imp);
 void freeImage(image imp);
 void imageDiffInPlace(image f, image g);
-image readPGM(const char* filename, int prePadY, int postPadY);
+image readPGM(const char* filename);
 void writePGM(const char* filename, image im);
 image disk(int r);
 void printPBM(image im);
