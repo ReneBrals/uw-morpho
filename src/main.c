@@ -12,13 +12,13 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	image SEimg = readPGM(argv[3], 0, 0, 0);
+	image SEimg = readPGM(argv[3], 0, 0);
 
 	chordSet SE = buildChordSet(SEimg);
 	freeImage(SEimg);
     image g, f;
 
-	f = readPGM(argv[2], SE.R[SE.Lnum -1] - 1, 0 - SE.minY, SE.maxY>0?SE.maxY:0);
+	f = readPGM(argv[2], 0 - SE.minY, SE.maxY>0?SE.maxY:0);
 
     if(!strcmp(argv[1],"erode")){
         g = erode(f,SE);
