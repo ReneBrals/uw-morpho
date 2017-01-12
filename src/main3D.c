@@ -12,14 +12,13 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	image3D SEimg = readP3M(argv[3], 0, 0, 0, 0, 0);
+	image3D SEimg = readP3M(argv[3], 0, 0, 0, 0);
 
 	chordSet3D SE = buildChordSet3D(SEimg);
 	freeImage3D(SEimg);
     image3D g, f;
 
 	f = readP3M(argv[2],
-		SE.R[SE.Lnum -1] - 1,
 		0 - SE.minY,
 		SE.maxY>0?SE.maxY:0,
 		0 - SE.minZ,

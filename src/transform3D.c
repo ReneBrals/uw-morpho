@@ -58,11 +58,10 @@ image3D erode3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
-    g.padX = SE.R[SE.Lnum -1] - 1;
     g.padY = 0 - SE.minY;
     g.padZ = 0 - SE.minZ;
     g.range = 255;
-    allocateImage3D(&g, SE.R[SE.Lnum -1] - 1,
+    allocateImage3D(&g,
         0 - SE.minY,
         SE.maxY>0 ? SE.maxY : 0,
         0 - SE.minZ,
@@ -80,11 +79,10 @@ image3D dilate3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
-    g.padX = SE.R[SE.Lnum -1] - 1;
     g.padY = 0 - SE.minY;
     g.padZ = 0 - SE.minZ;
     g.range = 255;
-    allocateImage3D(&g, SE.R[SE.Lnum -1] - 1,
+    allocateImage3D(&g,
         0 - SE.minY,
         SE.maxY>0 ? SE.maxY : 0,
         0 - SE.minZ,
