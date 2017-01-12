@@ -25,40 +25,6 @@ void printLUT3D(LUT3D Ty){
 	}
 }
 
-//TODO: rewrite to 3D
-/*
-void allocateLUT3D(LUT3D* Ty, chordSet3D SE){
-	int r,i;
-	int prePadX=0, postPadX=0;
-
-	if(SE.minX < 0){
-		prePadX = 0-SE.minX;
-	}
-
-	Ty->padX = prePadX;
-
-	if(SE.maxX > 0 || SE.R[SE.Lnum-1] > 0){
-
-		postPadX = MAX( SE.maxX, SE.R[SE.Lnum-1]);
-	}
-
-	Ty->arr = (unsigned char***)malloc((Ty->maxR-Ty->minR+1) * sizeof(char**));
-	for(r = 0; r < (Ty->maxR-Ty->minR+1); r++){
-		Ty->arr[r] = (unsigned char**)malloc(Ty->I * sizeof(char*));
-		for(i = 0; i < Ty->I ;i++){
-			Ty->arr[r][i] = (unsigned char*)calloc((Ty->X + prePadX + postPadX),sizeof(char));
-
-			//Shifting the X index such that negative indexes correspond to the prepadding.
-			Ty->arr[r][i] = &(Ty->arr[r][i][prePadX]);
-		}
-
-	}
-
-	// Shifting the R index so that it can be accessed from ymin <= r <= ymax
-	// without needing offsets
-	Ty->arr = &(Ty->arr[0 - Ty->minR]); //I'm sorry Valgrind...
-}*/
-
 void allocateLUT3D(LUT3D* Ty, chordSet3D SE){
 	int r,d,i;
 	int prePadX = 0, postPadX = 0;
