@@ -130,7 +130,8 @@ void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
-		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX, Ty.arr[r][i-1] + d - Ty.padX, Ty.X + Ty.padX);
+		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX, Ty.arr[r][i-1] + d - Ty.padX, Ty.X + Ty.padX - d);
+		memcpy(Ty.arr[r][i] + Ty.X - d, Ty.arr[r][i-1] + Ty.X - d, d);
 	}
 }
 
