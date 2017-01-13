@@ -25,7 +25,7 @@ void printLUT(LUT Ty){
 
 void allocateLUT(LUT* Ty, chordSet SE){
 	int r,i;
-	int prePadX=0, postPadX=0;
+	int prePadX=0;
 
 	if(SE.minX < 0){
 		prePadX = 0-SE.minX;
@@ -33,16 +33,11 @@ void allocateLUT(LUT* Ty, chordSet SE){
 
 	Ty->padX = prePadX;
 
-	if(SE.maxX > 0 || SE.R[SE.Lnum-1] > 0){
-
-		postPadX = MAX( SE.maxX, SE.R[SE.Lnum-1]);
-	}
-
 	Ty->arr = (unsigned char***)malloc((Ty->maxR-Ty->minR+1) * sizeof(char**));
 	for(r = 0; r < (Ty->maxR-Ty->minR+1); r++){
 		Ty->arr[r] = (unsigned char**)malloc(Ty->I * sizeof(char*));
 		for(i = 0; i < Ty->I ;i++){
-			Ty->arr[r][i] = (unsigned char*)calloc((Ty->X + prePadX + postPadX),sizeof(char));
+			Ty->arr[r][i] = (unsigned char*)calloc((Ty->X + prePadX),sizeof(char));
 
 			//Shifting the X index such that negative indexes correspond to the prepadding.
 			Ty->arr[r][i] = &(Ty->arr[r][i][prePadX]);
@@ -98,7 +93,7 @@ void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
-		simdMin(Ty.arr[r][i], Ty.arr[r][i-1], Ty.arr[r][i-1] + d, Ty.X);
+		simdMin(Ty.arr[r][i], Ty.arr[r][i-1], Ty.arr[r][i-1] + d, MAX((int)Ty.X - (int)d, 0));
 	}
 }
 

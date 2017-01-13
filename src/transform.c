@@ -5,17 +5,20 @@
 #include "SIMD.h"
 #include "transform.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 void lineErode(image* g, LUT Ty, chordSet SE, int y){
     memset(g->img[y],UCHAR_MAX,g->W);
     for(size_t c=0;c<SE.size;c++){
-        simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, g->W);
+        simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
 void lineDilate(image* g, LUT Ty, chordSet SE, int y){
     memset(g->img[y],0,g->W);
     for(size_t c=0;c<SE.size;c++){
-        simdMaxInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, g->W);
+        simdMaxInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
