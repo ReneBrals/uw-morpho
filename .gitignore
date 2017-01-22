@@ -34,9 +34,12 @@
 
 
 *.pgm
+*.p3m
 cachegrind*
 callgrind*
 uw2d
 uw3d
 *.py
 *.pyc
+
+mex.h

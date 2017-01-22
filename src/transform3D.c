@@ -6,7 +6,7 @@
 #include "transform3D.h"
 
 void lineErode3D(image3D* g, LUT3D Ty, chordSet3D SE, int y, int z){
-    memset(g->img[y],UCHAR_MAX,g->W);
+    memset(g->img[z][y],UCHAR_MAX,g->W);
     for(size_t c=0;c<SE.size;c++){
         simdMinInPlace(g->img[z][y], Ty.arr[ SE.C[c].y ][ SE.C[c].z ][ SE.C[c].i ] + SE.C[c].x, g->W);
 	}
@@ -58,6 +58,7 @@ image3D erode3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
+    g.D = f.D;
     g.range = 255;
     allocateImage3D(&g);
 
@@ -72,6 +73,7 @@ image3D dilate3D(image3D f, chordSet3D SE){
     image3D g;
     g.W = f.W;
     g.H = f.H;
+    g.D = f.D;
     g.range = 255;
     allocateImage3D(&g);
 

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
 
 	freeImage3D(f);
 
-	writeP3M("out.pgm",g);
+	writeP3M("out.p3m",g);
 
 	freeChordSet3D(SE);
 

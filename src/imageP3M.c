@@ -14,20 +14,20 @@ void allocateImage3D(image3D* imp){
     size_t i,j;
     size_t sizeX = imp->W;
     size_t sizeY = imp->H;
-    size_t sizeZ = imp->D;
+    size_t sizeZ = imp->D;\
 
     imp->bytes = (unsigned char**)malloc(sizeZ * sizeof(char*));
-
     for(i = 0; i< sizeZ; i++){
         imp->bytes[i] = (unsigned char*)calloc(sizeY * sizeX, sizeof(char));
     }
-    imp->img = (unsigned char***)malloc(sizeZ * sizeY * sizeof(char*));
 
+    imp->img = (unsigned char***)malloc(sizeZ * sizeof(char**));
     for(i = 0; i < sizeZ; i++){
+        imp->img[i] = (unsigned char**)malloc(sizeY * sizeof(char*));
         for(j = 0; j < sizeY; j++){
             imp->img[i][j] = (imp->bytes[i] + j*sizeX);
 
-            assert(imp->img[j] != NULL);
+            assert(imp->img[i][j] != NULL);
         }
     }
 }
@@ -68,22 +68,16 @@ image3D readP3M(const char* filename){
 
     assert ( fscanf(ifp, "%lu", &(im.W)) == 1 );
     assert ( fscanf(ifp, "%lu", &(im.H)) == 1 );
-
-    if(fileType == 2 || fileType == 5){ // PGM has a maxval, PBM doesn't
-        assert ( fscanf(ifp, "%lu", &(im.range)) == 1 );
-    } else {
-        im.range = 1;
-    }
+    assert ( fscanf(ifp, "%lu", &(im.D)) == 1 );
+    assert ( fscanf(ifp, "%lu\n", &(im.range)) == 1 );
 
     allocateImage3D(&im);
 
-    if(fileType == 1 || fileType == 2){
-        for(i=0;i<im.D;i++){
-            for(j=0;i<im.H;i++){
-                for(k=0;j<im.W;j++){
-                    c = getc(ifp);
-                    im.img[i][j][k] = c;
-                }
+    for(i=0;i<im.D;i++){
+        for(j=0;j<im.H;j++){
+            for(k=0;k<im.W;k++){
+                assert ( fscanf(ifp,"%hhu", &c) == 1 );
+                im.img[i][j][k] = c;
             }
         }
     }
@@ -98,8 +92,8 @@ void writeP3M(const char* filename, image3D im){
     FILE* ofp = fopen(filename,"w");
 
     size_t x,y,z;
-    fprintf(ofp,"P2\n");
-    fprintf(ofp,"%lu %lu\n",im.W,im.H);
+    fprintf(ofp,"P8\n");
+    fprintf(ofp,"%lu %lu %lu\n",im.W, im.H, im.D);
     fprintf(ofp,"%lu\n",im.range);
     for(z=0;z<im.D;z++){
         for(y=0;y<im.H;y++){

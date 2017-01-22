@@ -12,10 +12,11 @@
 void printLUT3D(LUT3D Ty){
 	int d, r, i, x;
 	for(d = Ty.minD; d <= Ty.maxD; d++){
+		printf("d=%d\n",d);
 		for(r = Ty.minR; r <= Ty.maxR; r++){
-			printf("r = %d:\n",r);
+			printf("\tr = %d:\n",r);
 			for(i = 0; i < Ty.I; i++){
-				printf("\t| %d", Ty.arr[d][r][i][0]);
+				printf("\t\t| %d", Ty.arr[d][r][i][0]);
 				for(x = 1; x < Ty.X; x++){
 					printf(" %d", Ty.arr[d][r][i][x]);
 				}
@@ -35,12 +36,16 @@ void allocateLUT3D(LUT3D* Ty, chordSet3D SE){
 
 	Ty->padX = prePadX;
 
+
+
 	if(SE.maxX > 0 || SE.R[SE.Lnum-1] > 0){
 
 		postPadX = MAX( SE.maxX, SE.R[SE.Lnum-1]);
 	}
 
-	for(r = 0; r < (Ty->maxR-Ty->minR+1); r++){
+	Ty->arr = (unsigned char****)malloc((Ty->maxR - Ty->minR + 1) * sizeof(char*));
+
+	for(r = 0; r < (Ty->maxR - Ty->minR + 1); r++){
 		Ty->arr[r] = (unsigned char***)malloc((Ty->maxD - Ty->minD + 1) * sizeof(char*));
 		for(d = 0; d < (Ty->maxD - Ty->minD + 1); d++){
 			Ty->arr[r][d] = (unsigned char**)malloc(Ty->I * sizeof(char*));
@@ -109,7 +114,7 @@ void computeMinRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y,
 	size_t i, dd;
 
 	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
-		memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+		memcpy(Ty.arr[r][d][0], f.img[z+d][y+r], Ty.X);
 	} else {
 		memset(Ty.arr[r][d][0], 0, Ty.X);
 	}
@@ -124,7 +129,7 @@ void computeMaxRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y,
 	size_t i, dd;
 
 	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
-		memcpy(Ty.arr[r][d][0], f.img[y+r][z+d], Ty.X);
+		memcpy(Ty.arr[r][d][0], f.img[z+d][y+r], Ty.X);
 	} else {
 		memset(Ty.arr[r][d][0], 0, Ty.X);
 	}

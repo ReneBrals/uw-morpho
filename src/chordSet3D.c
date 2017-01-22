@@ -12,7 +12,7 @@ chordSet3D initChordSet3D(){
 	chords.minY = INT_MAX;
 	chords.maxY = INT_MIN;
 	chords.minZ = INT_MAX;
-	chords.maxZ = INT_MAX;
+	chords.maxZ = INT_MIN;
 
 	return chords;
 }
@@ -54,12 +54,12 @@ void insertChordSet3D(chordSet3D* chords, chord3D c){
 		chords->maxY = c.y;
 	}
 
-	if(c.y < chords->minZ){
-		chords->minY = c.z;
+	if(c.z < chords->minZ){
+		chords->minZ = c.z;
 	}
 
-	if(c.y > chords->maxZ){
-		chords->maxY = c.z;
+	if(c.z > chords->maxZ){
+		chords->maxZ = c.z;
 	}
 }
 
@@ -88,6 +88,7 @@ chordSet3D buildChordSet3D (image3D SE){
 	int centerX = (SE.W-1)/2;
 	int centerY = (SE.H-1)/2;
 	int centerZ = (SE.D-1)/2;
+
 
 	for(z = 0; z < SE.D; z++){
 		for(y = 0; y < SE.H; y++){
