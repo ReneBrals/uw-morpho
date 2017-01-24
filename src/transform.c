@@ -4,14 +4,15 @@
 #include "LUT.h"
 #include "SIMD.h"
 #include "transform.h"
+#include <omp.h>
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void lineErode(image* g, LUT Ty, chordSet SE, int y){
+void lineErode(image* g, LUT Ty, chordSet SE, int y, int tid){
     memset(g->img[y],UCHAR_MAX,g->W);
     for(size_t c=0;c<SE.size;c++){
-        simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
+        simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
@@ -29,21 +30,40 @@ void imageDiffInPlace(image f, image g){
 }
 
 image erode(image f, chordSet SE){
-    size_t y;
     image g;
     g.W = f.W;
     g.H = f.H;
     g.range = 255;
     allocateImage(&g);
 
-    LUT Ty = computeMinLUT(f, SE);
-    lineErode(&g, Ty, SE, 0);
-    for(y=1;y< f.H; y++){
-        updateMinLUT(f,&Ty,SE,y);
-        lineErode(&g, Ty, SE, y);
+    LUT Ty = computeMinLUT(f, SE, 0);
+
+    #pragma omp parallel
+    {
+        int tid = omp_get_thread_num();
+        int num = omp_get_num_threads();
+
+        lineErode(&g, Ty, SE, tid, tid);
+        for(size_t y = num; y < (f.H/num)*num; y = y + num){
+            #pragma omp barrier
+
+            updateMinLUT(f,&Ty,SE,y, tid, num);
+
+            #pragma omp barrier
+
+            lineErode(&g, Ty, SE, y + tid, tid);
+        }
+    }
+
+    int num = omp_get_max_threads();
+
+    for(size_t y = (f.H/num)*num; y < f.H; y++){
+        updateMinLUT(f,&Ty,SE,y, num-1, 1);
+        lineErode(&g, Ty, SE, y, num-1);
     }
 
     freeLUT(Ty);
+
     return g;
 }
 
@@ -55,7 +75,7 @@ image dilate(image f, chordSet SE){
     g.range = 255;
     allocateImage(&g);
 
-    LUT Ty = computeMaxLUT(f, SE);
+    LUT Ty = computeMaxLUT(f, SE, 0);
     lineDilate(&g, Ty, SE, 0);
     for(y=1;y< f.H; y++){
         updateMaxLUT(f,&Ty,SE,y);

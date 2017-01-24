@@ -5,6 +5,7 @@
 #include <string.h>
 #include "SIMD.h"
 #include "LUT.h"
+#include <omp.h>
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
@@ -97,23 +98,29 @@ void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	}
 }
 
-void updateMinLUT(image f, LUT* Ty, chordSet SE, int y){
-	circularSwapPointers(*Ty);
-	computeMinRow(f, *Ty, SE, Ty->maxR, y);
+void updateMinLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t num){
+	#pragma omp single
+	{
+		for(size_t i = 0; i < num; i++)
+			circularSwapPointers(*Ty);
+	}
+
+	computeMinRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 
-LUT computeMinLUT(image f, chordSet SE){
+LUT computeMinLUT(image f, chordSet SE, size_t y){
 	int r;
 
 	LUT Ty;
 	Ty.I = SE.Lnum;
 	Ty.X = f.W;
 	Ty.minR = SE.minY;
-	Ty.maxR = SE.maxY;
+	Ty.maxR = SE.maxY + omp_get_max_threads() - 1;
 	allocateLUT(&Ty, SE);
 
+	#pragma omp parallel for
 	for(r=Ty.minR; r<=Ty.maxR; r++){
-		computeMinRow(f, Ty, SE, r, 0);
+		computeMinRow(f, Ty, SE, r, y);
 	}
 
 	return Ty;
@@ -135,12 +142,12 @@ void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	}
 }
 
-void updateMaxLUT(image f, LUT* Ty, chordSet SE, int y){
+void updateMaxLUT(image f, LUT* Ty, chordSet SE, size_t y){
 	circularSwapPointers(*Ty);
 	computeMaxRow(f, *Ty, SE, Ty->maxR, y);
 }
 
-LUT computeMaxLUT(image f, chordSet SE){
+LUT computeMaxLUT(image f, chordSet SE, size_t y){
 	int r;
 
 	LUT Ty;
@@ -151,7 +158,7 @@ LUT computeMaxLUT(image f, chordSet SE){
 	allocateLUT(&Ty, SE);
 
 	for(r=Ty.minR; r<=Ty.maxR; r++){
-		computeMaxRow(f, Ty, SE, r, 0);
+		computeMaxRow(f, Ty, SE, r, y);
 	}
 
 	return Ty;
