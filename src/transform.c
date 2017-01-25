@@ -9,17 +9,17 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void lineErode(image* g, LUT Ty, chordSet SE, int y, int tid){
+void lineErode(image* g, LUT Ty, chordSet SE, int y, size_t tid){
     memset(g->img[y],UCHAR_MAX,g->W);
     for(size_t c=0;c<SE.size;c++){
         simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
-void lineDilate(image* g, LUT Ty, chordSet SE, int y){
+void lineDilate(image* g, LUT Ty, chordSet SE, int y, size_t tid){
     memset(g->img[y],0,g->W);
     for(size_t c=0;c<SE.size;c++){
-        simdMaxInPlace(g->img[y], Ty.arr[ SE.C[c].y ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
+        simdMaxInPlace(g->img[y], Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
@@ -36,30 +36,37 @@ image erode(image f, chordSet SE){
     g.range = 255;
     allocateImage(&g);
 
+    size_t num = omp_get_max_threads();
+
     LUT Ty = computeMinLUT(f, SE, 0);
 
-    #pragma omp parallel
-    {
-        int tid = omp_get_thread_num();
-        int num = omp_get_num_threads();
+    if(f.H >= num){
+        #pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
 
-        lineErode(&g, Ty, SE, tid, tid);
-        for(size_t y = num; y < (f.H/num)*num; y = y + num){
-            #pragma omp barrier
+            lineErode(&g, Ty, SE, tid, tid);
+            for(size_t y = num; y < (f.H/num)*num; y = y + num){
+                #pragma omp barrier
 
-            updateMinLUT(f,&Ty,SE,y, tid, num);
+                updateMinLUT(f,&Ty,SE,y, tid, num);
 
-            #pragma omp barrier
+                #pragma omp barrier
 
-            lineErode(&g, Ty, SE, y + tid, tid);
+                lineErode(&g, Ty, SE, y + tid, tid);
+            }
         }
-    }
 
-    int num = omp_get_max_threads();
-
-    for(size_t y = (f.H/num)*num; y < f.H; y++){
-        updateMinLUT(f,&Ty,SE,y, num-1, 1);
-        lineErode(&g, Ty, SE, y, num-1);
+        for(size_t y = (f.H/num)*num; y < f.H; y++){
+            updateMinLUT(f,&Ty,SE, y-num+1, 0, 1);
+            lineErode(&g, Ty, SE, y, num-1);
+        }
+    } else {
+        lineErode(&g, Ty, SE, 0, 0);
+        for(size_t y = 1; y < f.H; y++){
+            updateMinLUT(f,&Ty,SE,y, 0, 1);
+            lineErode(&g, Ty, SE, y, 0);
+        }
     }
 
     freeLUT(Ty);
@@ -68,21 +75,47 @@ image erode(image f, chordSet SE){
 }
 
 image dilate(image f, chordSet SE){
-    size_t y;
     image g;
     g.W = f.W;
     g.H = f.H;
     g.range = 255;
     allocateImage(&g);
 
+    size_t num = omp_get_max_threads();
+
     LUT Ty = computeMaxLUT(f, SE, 0);
-    lineDilate(&g, Ty, SE, 0);
-    for(y=1;y< f.H; y++){
-        updateMaxLUT(f,&Ty,SE,y);
-        lineDilate(&g, Ty, SE, y);
+
+    if(f.H >= num){
+        #pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
+
+            lineDilate(&g, Ty, SE, tid, tid);
+            for(size_t y = num; y < (f.H/num)*num; y = y + num){
+                #pragma omp barrier
+
+                updateMaxLUT(f,&Ty,SE,y, tid, num);
+
+                #pragma omp barrier
+
+                lineDilate(&g, Ty, SE, y + tid, tid);
+            }
+        }
+
+        for(size_t y = (f.H/num)*num; y < f.H; y++){
+            updateMaxLUT(f,&Ty,SE, y-num+1, 0, 1);
+            lineDilate(&g, Ty, SE, y, num-1);
+        }
+    } else {
+        lineDilate(&g, Ty, SE, 0, 0);
+        for(size_t y = 1; y < f.H; y++){
+            updateMaxLUT(f,&Ty,SE,y, 0, 1);
+            lineDilate(&g, Ty, SE, y, 0);
+        }
     }
 
     freeLUT(Ty);
+
     return g;
 }
 

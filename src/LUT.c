@@ -142,9 +142,14 @@ void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	}
 }
 
-void updateMaxLUT(image f, LUT* Ty, chordSet SE, size_t y){
-	circularSwapPointers(*Ty);
-	computeMaxRow(f, *Ty, SE, Ty->maxR, y);
+void updateMaxLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t num){
+	#pragma omp single
+	{
+		for(size_t i = 0; i < num; i++)
+			circularSwapPointers(*Ty);
+	}
+
+	computeMaxRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 
 LUT computeMaxLUT(image f, chordSet SE, size_t y){
@@ -154,9 +159,10 @@ LUT computeMaxLUT(image f, chordSet SE, size_t y){
 	Ty.I = SE.Lnum;
 	Ty.X = f.W;
 	Ty.minR = SE.minY;
-	Ty.maxR = SE.maxY;
+	Ty.maxR = SE.maxY + omp_get_max_threads() - 1;
 	allocateLUT(&Ty, SE);
 
+	#pragma omp parallel for
 	for(r=Ty.minR; r<=Ty.maxR; r++){
 		computeMaxRow(f, Ty, SE, r, y);
 	}
