@@ -7,6 +7,9 @@
 #include <limits.h>
 #include "unistd.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 //TODO: max range isn't always 255, CHAR does not always work
 
 void allocateImage(image* imp){
@@ -50,6 +53,22 @@ image initImagePreallocated(unsigned char* x, size_t w, size_t h, size_t range){
         assert(g.img[i] != NULL);
     }
     return g;
+}
+
+image readImage(const char* filename){
+    int x,y,n;
+
+    if( access( filename, F_OK ) == -1 ){
+        printf("ERROR: file %s does not exist\n",filename);
+        exit(1);
+    }
+
+    if(strstr(filename,".pgm") != NULL){
+        return readPGM(filename);
+    } else {
+        unsigned char* data = stbi_load(filename,&x,&y,&n,1);
+        return initImagePreallocated(data,x,y,255);
+    }
 }
 
 image readPGM(const char* filename){

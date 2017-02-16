@@ -14,6 +14,7 @@ void allocateImage(image* imp);
 void freeImage(image imp);
 void imageDiffInPlace(image f, image g);
 image readPGM(const char* filename);
+image readImage(const char* filename);
 void writePGM(const char* filename, image im);
 image disk(int r);
 void printPBM(image im);

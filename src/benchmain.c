@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
     FILE * fp;
 
     image g, f;
-	f = readPGM(argv[1]);
+	f = readImage(argv[1]);
 	g = initImage(f.W, f.H, f.range);
 
     if( access( "circular.csv", F_OK ) != -1 ) {

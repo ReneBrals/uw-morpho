@@ -13,13 +13,13 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	image SEimg = readPGM(argv[3]);
+	image SEimg = readImage(argv[3]);
 
 	chordSet SE = buildChordSet(SEimg);
 	freeImage(SEimg);
     image g, f;
 
-	f = readPGM(argv[2]);
+	f = readImage(argv[2]);
 
 	g = initImage(f.W, f.H, f.range);
 
