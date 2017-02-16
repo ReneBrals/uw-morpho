@@ -42,7 +42,7 @@ void erode(image* g, image f, chordSet SE){
 
     LUT Ty = computeMinLUT(f, SE, 0, num);
 
-    if(f.H >= num){
+    if(num > 1 && f.H >= num){
         #pragma omp parallel
         {
             int tid = omp_get_thread_num();
@@ -87,7 +87,7 @@ void dilate(image* g, image f, chordSet SE){
 
     LUT Ty = computeMaxLUT(f, SE, 0, num);
 
-    if(f.H >= num){
+    if(num > 1 && f.H >= num){
         #pragma omp parallel
         {
             int tid = omp_get_thread_num();

@@ -34,6 +34,23 @@ image initImage(size_t w, size_t h, size_t range){
     return g;
 }
 
+image initImagePreallocated(unsigned char* x, size_t w, size_t h, size_t range){
+    image g;
+    g.W = w;
+    g.H = h;
+    g.range = 255;
+    g.bytes = x;
+
+    g.img = (unsigned char**)malloc((g.H) * sizeof(char*));
+
+    for(size_t i = 0; i < (g.H); i++){
+        g.img[i] = (g.bytes + i*(g.W));
+
+        assert(g.img[i] != NULL);
+    }
+    return g;
+}
+
 image readPGM(const char* filename){
     unsigned char c, fileType;
     size_t i, j, k;
