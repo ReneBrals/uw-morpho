@@ -1,5 +1,5 @@
 # uw-morpho
-Implementation of the Urbach-Wilkinson<sup>1</sup> algorithm for grayscale morphological operations with arbitrary flat structuring elements. Supports 2D and 3D images in PGM format and can be used within MATLAB.
+Implementation of the Urbach-Wilkinson<sup>1</sup> algorithm for grayscale morphological operations with arbitrary flat structuring elements. Supports 2D images in JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC, PNM, PPM and PGM file formats through [stb](https://github.com/nothings/stb) and 3D images in P3M. 2D transformations can be used within MATLAB.
 
 Makes use of vector intrinsics and OpenMP to increase performance. 
 
