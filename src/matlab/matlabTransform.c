@@ -75,6 +75,10 @@ void matlabTransform(int nlhs, mxArray *plhs[],
         erode(&g,f,SE);
     } else if (mode == UW_DILATE){
         dilate(&g,f,SE);
+    } else if (mode == UW_OPEN){
+        open(&g,f,SE);
+    } else if (mode == UW_CLOSE){
+        close(&g,f,SE);
     }
 
     rowtoColumnMajorOrder((unsigned char*)mxGetData(plhs[0]),g,ncolsF,nrowsF);
