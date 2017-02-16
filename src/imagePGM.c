@@ -5,6 +5,7 @@
 #include <math.h>
 #include "imagePGM.h"
 #include <limits.h>
+#include "unistd.h"
 
 //TODO: max range isn't always 255, CHAR does not always work
 
@@ -55,6 +56,11 @@ image readPGM(const char* filename){
     unsigned char c, fileType;
     size_t i, j, k;
     image im;
+
+    if( access( filename, F_OK ) == -1 ){
+        printf("ERROR: file %s does not exist\n",filename);
+        exit(1);
+    }
 
     FILE* ifp = fopen(filename,"r");
 
