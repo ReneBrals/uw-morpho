@@ -21,8 +21,10 @@ int main(int argc, char* argv[]){
 
 	f = readPGM(argv[2]);
 
+	g = initImage(f.W, f.H, f.range);
+
     if(!strcmp(argv[1],"erode")){
-		g = erode(f,SE);
+		erode(&g, f, SE);
 		/*
 		double tick, tock;
 		printf("multi: ");
@@ -36,15 +38,15 @@ int main(int argc, char* argv[]){
 		printf("\n");
 		*/
     } else if(!strcmp(argv[1],"dilate")){
-        g = dilate(f,SE);
+        dilate(&g, f, SE);
     } else if(!strcmp(argv[1],"open")){
-		g = open(f,SE);
+		open(&g, f, SE);
 	} else if(!strcmp(argv[1],"close")){
-		g = close(f,SE);
+		close(&g, f, SE);
 	} else if(!strcmp(argv[1],"whitetophat")){
-		g = close(f,SE);
+		close(&g, f, SE);
 	} else if(!strcmp(argv[1],"blacktophat")){
-		g = close(f,SE);
+		close(&g, f, SE);
 	} else {
         printf("ERROR: operation '%s' not supported",argv[1]);
     }

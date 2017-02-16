@@ -24,28 +24,30 @@ void lineDilate(image* g, LUT Ty, chordSet SE, int y, size_t tid){
 }
 
 void imageDiffInPlace(image f, image g){
+    #pragma omp parallel for
     for(size_t y = 0;y<f.H;y++){
         simdSubInPlace(f.img[y],g.img[y],f.W);
     }
 }
 
-image erode(image f, chordSet SE){
-    image g;
-    g.W = f.W;
-    g.H = f.H;
-    g.range = 255;
-    allocateImage(&g);
+void erode(image* g, image f, chordSet SE){
+	size_t num;
+	#pragma omp parallel
+	{
+		#pragma omp single
+		{
+			num = omp_get_num_threads();
+		}
+	}
 
-    size_t num = omp_get_max_threads();
-
-    LUT Ty = computeMinLUT(f, SE, 0);
+    LUT Ty = computeMinLUT(f, SE, 0, num);
 
     if(f.H >= num){
         #pragma omp parallel
         {
             int tid = omp_get_thread_num();
 
-            lineErode(&g, Ty, SE, tid, tid);
+            lineErode(g, Ty, SE, tid, tid);
             for(size_t y = num; y < (f.H/num)*num; y = y + num){
                 #pragma omp barrier
 
@@ -53,44 +55,44 @@ image erode(image f, chordSet SE){
 
                 #pragma omp barrier
 
-                lineErode(&g, Ty, SE, y + tid, tid);
+                lineErode(g, Ty, SE, y + tid, tid);
             }
         }
 
         for(size_t y = (f.H/num)*num; y < f.H; y++){
             updateMinLUT(f,&Ty,SE, y-num+1, 0, 1);
-            lineErode(&g, Ty, SE, y, num-1);
+            lineErode(g, Ty, SE, y, num-1);
         }
     } else {
-        lineErode(&g, Ty, SE, 0, 0);
+        lineErode(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
             updateMinLUT(f,&Ty,SE,y, 0, 1);
-            lineErode(&g, Ty, SE, y, 0);
+            lineErode(g, Ty, SE, y, 0);
         }
     }
 
     freeLUT(Ty);
-
-    return g;
 }
 
-image dilate(image f, chordSet SE){
-    image g;
-    g.W = f.W;
-    g.H = f.H;
-    g.range = 255;
-    allocateImage(&g);
+void dilate(image* g, image f, chordSet SE){
 
-    size_t num = omp_get_max_threads();
+	size_t num;
+	#pragma omp parallel
+	{
+		#pragma omp single
+		{
+			num = omp_get_num_threads();
+		}
+	}
 
-    LUT Ty = computeMaxLUT(f, SE, 0);
+    LUT Ty = computeMaxLUT(f, SE, 0, num);
 
     if(f.H >= num){
         #pragma omp parallel
         {
             int tid = omp_get_thread_num();
 
-            lineDilate(&g, Ty, SE, tid, tid);
+            lineDilate(g, Ty, SE, tid, tid);
             for(size_t y = num; y < (f.H/num)*num; y = y + num){
                 #pragma omp barrier
 
@@ -98,49 +100,47 @@ image dilate(image f, chordSet SE){
 
                 #pragma omp barrier
 
-                lineDilate(&g, Ty, SE, y + tid, tid);
+                lineDilate(g, Ty, SE, y + tid, tid);
             }
         }
 
         for(size_t y = (f.H/num)*num; y < f.H; y++){
             updateMaxLUT(f,&Ty,SE, y-num+1, 0, 1);
-            lineDilate(&g, Ty, SE, y, num-1);
+            lineDilate(g, Ty, SE, y, num-1);
         }
     } else {
-        lineDilate(&g, Ty, SE, 0, 0);
+        lineDilate(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
             updateMaxLUT(f,&Ty,SE,y, 0, 1);
-            lineDilate(&g, Ty, SE, y, 0);
+            lineDilate(g, Ty, SE, y, 0);
         }
     }
 
     freeLUT(Ty);
-
-    return g;
 }
 
-image open(image f, chordSet SE){
-	image g = erode(f, SE);
-	image h = dilate(g, SE);
-	freeImage(g);
-	return h;
+void open(image* g, image f, chordSet SE){
+    erode(g, f, SE);
+    image h = initImage(f.W,f.H,f.range);
+    dilate(&h, *g, SE);
+    freeImage(*g);
+    *g = h;
 }
 
-image close(image f, chordSet SE){
-	image g = dilate(f, SE);
-	image h = erode(g, SE);
-	freeImage(g);
-	return h;
+void close(image* g, image f, chordSet SE){
+    dilate(g, f, SE);
+    image h = initImage(f.W,f.H,f.range);
+    erode(&h, *g, SE);
+    freeImage(*g);
+    *g = h;
 }
 
-image whiteTopHat(image f, chordSet SE){
-	image g = open(f,SE);
-	imageDiffInPlace(f,g);
-	return g;
+void whiteTopHat(image* g, image f, chordSet SE){
+	open(g, f,SE);
+	imageDiffInPlace(f,*g);
 }
 
-image blackTopHat(image f, chordSet SE){
-	image g = close(f,SE);
-	imageDiffInPlace(g,f);
-	return g;
+void blackTopHat(image* g, image f, chordSet SE){
+    close(g, f,SE);
+	imageDiffInPlace(f,*g);
 }

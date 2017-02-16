@@ -108,14 +108,14 @@ void updateMinLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t nu
 	computeMinRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 
-LUT computeMinLUT(image f, chordSet SE, size_t y){
+LUT computeMinLUT(image f, chordSet SE, size_t y, size_t num){
 	int r;
 
 	LUT Ty;
 	Ty.I = SE.Lnum;
 	Ty.X = f.W;
 	Ty.minR = SE.minY;
-	Ty.maxR = SE.maxY + omp_get_max_threads() - 1;
+	Ty.maxR = SE.maxY + num - 1;
 	allocateLUT(&Ty, SE);
 
 	#pragma omp parallel for
@@ -152,14 +152,14 @@ void updateMaxLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t nu
 	computeMaxRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 
-LUT computeMaxLUT(image f, chordSet SE, size_t y){
+LUT computeMaxLUT(image f, chordSet SE, size_t y, size_t num){
 	int r;
 
 	LUT Ty;
 	Ty.I = SE.Lnum;
 	Ty.X = f.W;
 	Ty.minR = SE.minY;
-	Ty.maxR = SE.maxY + omp_get_max_threads() - 1;
+	Ty.maxR = SE.maxY + num - 1;
 	allocateLUT(&Ty, SE);
 
 	#pragma omp parallel for
