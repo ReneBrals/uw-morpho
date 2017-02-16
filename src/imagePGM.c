@@ -25,6 +25,15 @@ void freeImage(image imp){
     free(imp.img);
 }
 
+image initImage(size_t w, size_t h, size_t range){
+    image g;
+    g.W = w;
+    g.H = h;
+    g.range = 255;
+    allocateImage(&g);
+    return g;
+}
+
 image readPGM(const char* filename){
     unsigned char c, fileType;
     size_t i, j, k;
@@ -137,6 +146,88 @@ image disk(int d){
             im.img[y][x] = sqrt((y-hd)*(y-hd) + (x-hd)*(x-hd)) < hd ? 1 : 0;
         }
     }
+
+    im.img[im.H/2][im.W/2] = 1;
+
+    return im;
+}
+
+image rectangle(int d){
+    image im;
+    im.W = d;
+    im.H = d;
+    im.range = 1;
+
+    allocateImage(&im);
+
+    size_t x,y;
+    for(y=0;y<im.H;y++){
+        for(x=0;x<im.W;x++){
+            im.img[y][x] = 1;
+        }
+    }
+
+    return im;
+}
+
+image h(int d){
+    image im;
+    im.W = d;
+    im.H = d;
+    im.range = 1;
+
+    allocateImage(&im);
+
+    size_t x,y;
+
+    for(x=0;x<im.W;x++){
+        im.img[im.H/2][x] = 1;
+    }
+
+    for(y=0;y<im.H;y++){
+        im.img[y][0] = 1;
+        im.img[y][im.W - 1] = 1;
+    }
+
+    return im;
+}
+
+image checkerboard(int d){
+    image im;
+    im.W = d;
+    im.H = d;
+    im.range = 1;
+
+    allocateImage(&im);
+
+    size_t x,y;
+
+    for(y=0;y<im.H;y++){
+        for(x=0;x<im.W;x++){
+            im.img[y][x] = (x+y % 2 == 0);
+        }
+    }
+
+    return im;
+}
+
+image noise(int d){
+    image im;
+    im.W = d;
+    im.H = d;
+    im.range = 1;
+
+    allocateImage(&im);
+
+    size_t x,y;
+
+    for(y=0;y<im.H;y++){
+        for(x=0;x<im.W;x++){
+            im.img[y][x] = rand() % 2;
+        }
+    }
+
+    im.img[im.H/2][im.W/2] = 1;
 
     return im;
 }

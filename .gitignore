@@ -39,7 +39,12 @@ cachegrind*
 callgrind*
 uw2d
 uw3d
+bench
 *.py
 *.pyc
 
-mex.h
+*.csv
+*.pdf
+*.eps
+*.mexw64
+*.pdb
