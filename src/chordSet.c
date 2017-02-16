@@ -81,7 +81,7 @@ chordSet buildChordSet (image SE){
 
 		chordStart = -1;
 		for(x = 0; x < SE.W; x++){
-			if(SE.img[y][x] == 1 && chordStart == -1){
+			if(SE.img[y][x] != 0 && chordStart == -1){
 				chordStart = x;
 			} else if (SE.img[y][x] == 0 && chordStart != -1){
 				c.x = chordStart - centerX;
@@ -102,7 +102,6 @@ chordSet buildChordSet (image SE){
 	}
 
 	qsort(chords.C,chords.size,sizeof(chord),compChordLength);
-	//printf("ok.\n");
 
 	chords.R = (int*)malloc(sizeof(int));
 	chords.Lnum = 0;
