@@ -32,4 +32,4 @@ Execute the `build_uw_morpho.m` script within MATLAB.
 
 **Supports uint8 only**
 
-<sup>1. Urbach, E., & Wilkinson, M. (2006). Efficient 2-D Gray-Scale Dilations and Erosions with Arbitrary Flat Structuring Elements. In 2006 International Conference on Image Processing (Vol. 17, pp. 1573–1576). IEEE. http://doi.org/10.1109/ICIP.2006.312608</sup>
+<sup>1. Erik R. Urbach, Michael H. F. Wilkinson, "Efficient 2-D Grayscale Morphological Transformations With Arbitrary Flat Structuring Elements", Image Processing IEEE Transactions on, vol. 17, pp. 1-8, 2008, ISSN 1057-7149. IEEE. https://doi.org/10.1109/TIP.2007.912582</sup>
