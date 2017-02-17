@@ -1,3 +1,7 @@
+/* LUT3D.h
+ * Defines the lookup table required by the Urbach-Wilkinson algorithm.
+ */
+
 #ifndef _LUT3
 #define _LUT3
 

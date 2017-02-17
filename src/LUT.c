@@ -1,5 +1,5 @@
 /* LUT.c
- * Functions pertaining to the computation of the lookup table
+ * Defines the lookup table required by the Urbach-Wilkinson algorithm.
  */
 
 #include <stdio.h>

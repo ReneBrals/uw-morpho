@@ -1,3 +1,7 @@
+/* imageP3M.c
+ * 3D image file I/O.
+ */
+
 #ifndef _IMGPGM3
 #define _IMGPGM3
 #include <stdio.h>
@@ -8,7 +12,7 @@ typedef struct {
 	size_t W;
 	size_t H;
 	size_t D;
-	size_t range; //Usually 255, not always though!
+	size_t range;
 } image3D;
 
 void freeImage3D(image3D imp);

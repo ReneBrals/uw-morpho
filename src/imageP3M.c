@@ -1,33 +1,37 @@
+/* imageP3M.c
+ * 3D image file I/O.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
-#include "imageP3M.h"
 #include <limits.h>
+#include "imageP3M.h"
+#include "safeMalloc.h"
 
-//TODO: max range isn't always 255, CHAR does not always work
-
-
-//Kill me now it hurts to live.
 void allocateImage3D(image3D* imp){
     size_t i,j;
     size_t sizeX = imp->W;
     size_t sizeY = imp->H;
-    size_t sizeZ = imp->D;\
+    size_t sizeZ = imp->D;
 
-    imp->bytes = (unsigned char**)malloc(sizeZ * sizeof(char*));
-    for(i = 0; i< sizeZ; i++){
-        imp->bytes[i] = (unsigned char*)calloc(sizeY * sizeX, sizeof(char));
+    /*
+     * An image is stored as an array of contiguous 2D arrays with a 1D set of
+     * pointers in front of them to allow for f.img[z][y][x] accessing.
+     */
+
+    imp->bytes = (unsigned char**)safeMalloc(sizeZ * sizeof(char*));
+    for(i = 0; i < sizeZ; i++){
+        imp->bytes[i] = (unsigned char*)safeCalloc(sizeY * sizeX, sizeof(char));
     }
 
-    imp->img = (unsigned char***)malloc(sizeZ * sizeof(char**));
+    imp->img = (unsigned char***)safeMalloc(sizeZ * sizeof(char**));
     for(i = 0; i < sizeZ; i++){
-        imp->img[i] = (unsigned char**)malloc(sizeY * sizeof(char*));
+        imp->img[i] = (unsigned char**)safeMalloc(sizeY * sizeof(char*));
         for(j = 0; j < sizeY; j++){
             imp->img[i][j] = (imp->bytes[i] + j*sizeX);
-
-            assert(imp->img[i][j] != NULL);
         }
     }
 }
@@ -73,9 +77,9 @@ image3D readP3M(const char* filename){
 
     allocateImage3D(&im);
 
-    for(i=0;i<im.D;i++){
-        for(j=0;j<im.H;j++){
-            for(k=0;k<im.W;k++){
+    for(i = 0; i < im.D; i++){
+        for(j = 0; j < im.H; j++){
+            for(k = 0; k < im.W; k++){
                 assert ( fscanf(ifp,"%hhu", &c) == 1 );
                 im.img[i][j][k] = c;
             }
@@ -84,7 +88,6 @@ image3D readP3M(const char* filename){
 
     fclose(ifp);
 
-    //printf("???\n");
     return im;
 }
 
@@ -92,15 +95,15 @@ void writeP3M(const char* filename, image3D im){
     FILE* ofp = fopen(filename,"w");
 
     size_t x,y,z;
-    fprintf(ofp,"P8\n");
-    fprintf(ofp,"%lu %lu %lu\n",im.W, im.H, im.D);
-    fprintf(ofp,"%lu\n",im.range);
-    for(z=0;z<im.D;z++){
-        for(y=0;y<im.H;y++){
-            for(x=0;x<im.W-1;x++){
-                fprintf(ofp,"%d ",im.img[z][y][x]);
+    fprintf(ofp, "P8\n");
+    fprintf(ofp, "%lu %lu %lu\n", im.W, im.H, im.D);
+    fprintf(ofp, "%lu\n", im.range);
+    for(z = 0;z<im.D;z++){
+        for(y = 0;y < im.H;y++){
+            for(x = 0;x < im.W-1; x++){
+                fprintf(ofp, "%d ", im.img[z][y][x]);
             }
-            fprintf(ofp,"%d\n",im.img[z][y][im.W-1]);
+            fprintf(ofp, "%d\n", im.img[z][y][im.W - 1]);
         }
     }
 
@@ -119,10 +122,11 @@ image3D sphere(int d){
     allocateImage3D(&im);
 
     size_t x,y, z;
-    for(z=0;z<im.D;z++){
-        for(y=0;y<im.H;y++){
-            for(x=0;x<im.W;x++){
-                im.img[z][y][x] = sqrt((y-hd)*(y-hd) + (x-hd)*(x-hd)) < hd ? 1 : 0;
+    for(z = 0;z < im.D; z++){
+        for(y = 0;y < im.H; y++){
+            for(x = 0;x < im.W; x++){
+                im.img[z][y][x] = sqrt((y - hd)*(y - hd) + (x - hd)*(x - hd))
+                    < hd ? 1 : 0;
             }
         }
     }
@@ -133,9 +137,9 @@ image3D sphere(int d){
 void printP3BM(image3D im){
     size_t z,y,x;
 
-    for(z=0;z<im.D;z++){
-        for(y=0;y<im.H;y++){
-            for(x=0;x<im.W;x++){
+    for(z = 0;z < im.D; z++){
+        for(y = 0;y < im.H; y++){
+            for(x = 0;x < im.W; x++){
                 putchar(im.img[z][y][x] == 1 ? '=' : '.');
             }
             putchar('\n');

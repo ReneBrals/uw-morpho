@@ -22,26 +22,28 @@ int main(int argc, char* argv[]){
 
     if(!strcmp(argv[1],"erode")){
         g = erode3D(f,SE);
+		writeP3M("out.p3m", g);
     } else if(!strcmp(argv[1],"dilate")){
         g = dilate3D(f,SE);
+		writeP3M("out.p3m", g);
     } else if(!strcmp(argv[1],"open")){
 		g = open3D(f,SE);
+		writeP3M("out.p3m", g);
 	} else if(!strcmp(argv[1],"close")){
 		g = close3D(f,SE);
+		writeP3M("out.p3m", g);
 	} else if(!strcmp(argv[1],"whitetophat")){
 		g = close3D(f,SE);
+		writeP3M("out.p3m", f);
 	} else if(!strcmp(argv[1],"blacktophat")){
 		g = close3D(f,SE);
+		writeP3M("out.p3m", g);
 	} else {
-        printf("ERROR: operation '%s' not supported",argv[1]);
+        printf("ERROR: operation '%s' not supported", argv[1]);
     }
 
 	freeImage3D(f);
-
-	writeP3M("out.p3m",g);
-
 	freeChordSet3D(SE);
-
 	freeImage3D(g);
 
 	return 0;

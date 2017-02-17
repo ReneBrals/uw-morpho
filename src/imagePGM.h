@@ -11,7 +11,7 @@ typedef struct {
 	unsigned char** img;
 	size_t W;
 	size_t H;
-	size_t range; //Usually 255, not always though!
+	size_t range;
 } image;
 
 void allocateImage(image* imp);

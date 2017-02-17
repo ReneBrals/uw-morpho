@@ -84,8 +84,8 @@ chordSet buildChordSet(image SE){
 	 * In erosion/dilation, the center of the image has S.E. offset (0,0).
 	 * Otherwise, the resulting image would be shifted to the top-left.
 	 */
-	int centerX = (SE.W-1) / 2;
-	int centerY = (SE.H-1) / 2;
+	int centerX = (SE.W - 1) / 2;
+	int centerY = (SE.H - 1) / 2;
 
 	/*
 	 * Computing the set of chords C.
@@ -138,10 +138,7 @@ chordSet buildChordSet(image SE){
 		val = 1;
 	}
 
-	/*
-	 * Adding intermediary length such that consecutive lengths never more
-	 * than double.
-	 */
+
 	for(i=0;i<chords.size;i++){
 		if(val != chords.C[i].l){
 			while(2 * val < chords.C[i].l && val != 0){
@@ -178,7 +175,7 @@ chordSet buildChordSet(image SE){
 
 	/*
 	 * Chords are sorted on Y. This way, when a row of the lookup table or image
-	 * is cached, the next chord offset has a better of chance of being on the
+	 * is cached, the next chord offset has a better chance of being on the
 	 * same cache line.
 	 */
 	qsort(chords.C, chords.size, sizeof(chord), compChordY);

@@ -1,3 +1,7 @@
+/* LUT3D.c
+ * Defines the lookup table required by the Urbach-Wilkinson algorithm.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -5,26 +9,9 @@
 #include <string.h>
 #include "SIMD.h"
 #include "LUT3D.h"
+#include "safeMalloc.h"
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
-
-//TODO: find a good way to print this.
-void printLUT3D(LUT3D Ty){
-	int d, r, i, x;
-	for(d = Ty.minD; d <= Ty.maxD; d++){
-		printf("d=%d\n",d);
-		for(r = Ty.minR; r <= Ty.maxR; r++){
-			printf("\tr = %d:\n",r);
-			for(i = 0; i < Ty.I; i++){
-				printf("\t\t| %d", Ty.arr[d][r][i][0]);
-				for(x = 1; x < Ty.X; x++){
-					printf(" %d", Ty.arr[d][r][i][x]);
-				}
-				printf(" |\n");
-			}
-		}
-	}
-}
 
 void allocateLUT3D(LUT3D* Ty, chordSet3D SE){
 	int r,d,i;
@@ -36,23 +23,23 @@ void allocateLUT3D(LUT3D* Ty, chordSet3D SE){
 
 	Ty->padX = prePadX;
 
-
-
 	if(SE.maxX > 0 || SE.R[SE.Lnum-1] > 0){
 
 		postPadX = MAX( SE.maxX, SE.R[SE.Lnum-1]);
 	}
 
-	Ty->arr = (unsigned char****)malloc((Ty->maxR - Ty->minR + 1) * sizeof(char*));
+	Ty->arr = (unsigned char****)safeMalloc((Ty->maxR - Ty->minR + 1) * sizeof(char*));
 
 	for(r = 0; r < (Ty->maxR - Ty->minR + 1); r++){
-		Ty->arr[r] = (unsigned char***)malloc((Ty->maxD - Ty->minD + 1) * sizeof(char*));
+		Ty->arr[r] = (unsigned char***)safeMalloc((Ty->maxD - Ty->minD + 1) * sizeof(char*));
 		for(d = 0; d < (Ty->maxD - Ty->minD + 1); d++){
-			Ty->arr[r][d] = (unsigned char**)malloc(Ty->I * sizeof(char*));
-			for(i = 0; i < Ty->I ;i++){
-				Ty->arr[r][d][i] = (unsigned char*)calloc((Ty->X + prePadX + postPadX),sizeof(char));
+			Ty->arr[r][d] = (unsigned char**)safeMalloc(Ty->I * sizeof(char*));
+			for(i = 0; i < Ty->I ; i++){
+				Ty->arr[r][d][i] = (unsigned char*)safeCalloc((Ty->X + prePadX + postPadX), sizeof(char));
 
-				//Shifting the X index such that negative indexes correspond to the prepadding.
+				/* Shifting the X index such that negative indices correspond to
+				 * the pre-padding.
+				 */
 				Ty->arr[r][d][i] = &(Ty->arr[r][d][i][prePadX]);
 			}
 		}
@@ -82,7 +69,7 @@ void freeLUT3D(LUT3D table){
 		dp = &(table.arr[r][table.minD]);
 
 		for(d = table.minD; d <= table.maxD; d++){
-			for(i=0;i<table.I;i++){
+			for(i = 0;i < table.I;i++){
 				//The X index was shifted for padding
 				free(table.arr[r][d][i] - table.padX);
 			}
@@ -102,7 +89,7 @@ void circularSwapPointers3D(LUT3D Ty){
 		Ty0 = Ty.arr[Ty.minR];
 
 		for( r = Ty.minR; r< Ty.maxR; r++){
-			Ty.arr[r] = Ty.arr[r+1];
+			Ty.arr[r] = Ty.arr[r + 1];
 		}
 
 		r = Ty.maxR;
@@ -113,6 +100,11 @@ void circularSwapPointers3D(LUT3D Ty){
 void computeMinRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y, size_t z){
 	size_t i, dd;
 
+	/*
+	 * Algorithm II.1 in Urbach-Wilkinson paper.
+	 * Computes lookup table for a single index of r.
+	 */
+
 	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
 		memcpy(Ty.arr[r][d][0], f.img[z+d][y+r], Ty.X);
 	} else {
@@ -121,13 +113,18 @@ void computeMinRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y,
 
 	for(i=1;i<SE.Lnum;i++){
 		dd = SE.R[i] - SE.R[i-1];
-		simdMin(Ty.arr[r][d][i], Ty.arr[r][d][i-1], Ty.arr[r][d][i-1] + dd, Ty.X);
+		simdMin(Ty.arr[r][d][i], Ty.arr[r][d][i - 1], Ty.arr[r][d][i - 1] + dd, Ty.X);
 	}
 }
 
 void computeMaxRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y, size_t z){
 	size_t i, dd;
 
+	/*
+	 * Algorithm II.1 in Urbach-Wilkinson paper.
+	 * Computes lookup table for a single index of r.
+	 */
+
 	if(y+r >= 0 && y+r < f.H && z+d >= 0 && z+d < f.D){
 		memcpy(Ty.arr[r][d][0], f.img[z+d][y+r], Ty.X);
 	} else {
@@ -136,7 +133,7 @@ void computeMaxRow3D(image3D f, LUT3D Ty, chordSet3D SE, int r, int d, size_t y,
 
 	for(i=1;i<SE.Lnum;i++){
 		dd = SE.R[i] - SE.R[i-1];
-		simdMax(Ty.arr[r][d][i] - Ty.padX, Ty.arr[r][d][i-1] - Ty.padX, Ty.arr[r][d][i-1] + dd - Ty.padX, Ty.X + Ty.padX);
+		simdMax(Ty.arr[r][d][i] - Ty.padX, Ty.arr[r][d][i - 1] - Ty.padX, Ty.arr[r][d][i-1] + dd - Ty.padX, Ty.X + Ty.padX);
 	}
 }
 
@@ -172,8 +169,8 @@ LUT3D computeMinLUT3D(image3D f, chordSet3D SE, int z){
 
 	allocateLUT3D(&Ty, SE);
 
-	for(d=Ty.minD; d<=Ty.maxD; d++){
-		for(r=Ty.minR; r<=Ty.maxR; r++){
+	for(d = Ty.minD; d <= Ty.maxD; d++){
+		for(r = Ty.minR; r <= Ty.maxR; r++){
 			computeMinRow3D(f, Ty, SE, r, d, 0, z);
 		}
 	}
@@ -199,4 +196,21 @@ LUT3D computeMaxLUT3D(image3D f, chordSet3D SE, int z){
 	}
 
 	return Ty;
+}
+
+void printLUT3D(LUT3D Ty){
+	int d, r, i, x;
+	for(d = Ty.minD; d <= Ty.maxD; d++){
+		printf("d=%d\n",d);
+		for(r = Ty.minR; r <= Ty.maxR; r++){
+			printf("\tr = %d:\n",r);
+			for(i = 0; i < Ty.I; i++){
+				printf("\t\t| %d", Ty.arr[d][r][i][0]);
+				for(x = 1; x < Ty.X; x++){
+					printf(" %d", Ty.arr[d][r][i][x]);
+				}
+				printf(" |\n");
+			}
+		}
+	}
 }
