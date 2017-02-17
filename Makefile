@@ -1,9 +1,9 @@
 CC=g++
 CFLAGS=-Wall -g -lm -O3 -fopenmp -mtune=native
 
-all: 2d_sse2 3d_sse2
-fast: 2d_avx2 3d_avx2
-slow: 2d 3d
+all: 2d_sse2 3d_sse2 bench
+fast: 2d_avx2 3d_avx2 benchfast
+slow: 2d 3d benchslow
 
 2d_avx2: src/main.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT.c src/SIMD.c src/safeMalloc.c
 	$(CC) $(CFLAGS) -mavx2 src/main.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT.c src/SIMD.c src/safeMalloc.c -o uw2d
@@ -29,3 +29,10 @@ benchfast: src/benchmain.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT
 	$(CC) $(CFLAGS) -mavx2 src/benchmain.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT.c src/SIMD.c src/safeMalloc.c -o bench
 benchslow: src/benchmain.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT.c src/SIMD.c src/safeMalloc.c
 	$(CC) $(CFLAGS) -mno-sse2 src/benchmain.c src/transform.c src/chordSet.c src/imagePGM.c src/LUT.c src/SIMD.c src/safeMalloc.c -o bench
+
+split: src/main.c src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c
+	$(CC) $(CFLAGS) -msse2 src/main.c src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c -o uw2d
+splitfast: src/main.c src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c
+	$(CC) $(CFLAGS) -mavx2 src/main.c src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c -o uw2d
+splitslow: src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c
+	$(CC) $(CFLAGS) -no-sse2 src/main.c src/transformSplitting.c src/chordSet.c src/imagePGM.c src/LUTSplitting.c src/SIMD.c src/safeMalloc.c -o uw2d
