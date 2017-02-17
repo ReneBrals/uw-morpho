@@ -74,7 +74,7 @@ int compChordY(const void* p, const void* q){
 	return (a.y > b.y) - (a.y < b.y);
 }
 
-chordSet buildChordSet (image SE){
+chordSet buildChordSet(image SE){
 	chordSet chords = initChordSet();
 	chord c;
 	int chordStart, val;
@@ -84,8 +84,8 @@ chordSet buildChordSet (image SE){
 	 * In erosion/dilation, the center of the image has S.E. offset (0,0).
 	 * Otherwise, the resulting image would be shifted to the top-left.
 	 */
-	int centerX = (SE.W-1)/2;
-	int centerY = (SE.H-1)/2;
+	int centerX = (SE.W-1) / 2;
+	int centerY = (SE.H-1) / 2;
 
 	/*
 	 * Computing the set of chords C.
@@ -112,7 +112,7 @@ chordSet buildChordSet (image SE){
 			// Chord ends at end of line.
 			c.x = chordStart - centerX;
 			c.y = y - centerY;
-			c.l = x-chordStart;
+			c.l = x - chordStart;
 			insertChordSet(&chords,c);
 		}
 	}
@@ -125,7 +125,7 @@ chordSet buildChordSet (image SE){
 	qsort(chords.C, chords.size, sizeof(chord), compChordLength);
 	chords.R = (int*)safeMalloc(sizeof(int));
 	chords.Lnum = 0;
-	val=0;
+	val = 0;
 	size_t rCap = 1;
 
 	if(chords.size > 0){
@@ -144,7 +144,7 @@ chordSet buildChordSet (image SE){
 	 */
 	for(i=0;i<chords.size;i++){
 		if(val != chords.C[i].l){
-			while(2*val < chords.C[i].l && val != 0){
+			while(2 * val < chords.C[i].l && val != 0){
 
 				if(chords.Lnum >= rCap){
 					chords.R = (int*)safeRealloc(chords.R, rCap * 2 * sizeof(int));

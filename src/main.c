@@ -5,7 +5,6 @@
 #include "chordSet.h"
 #include "imagePGM.h"
 #include "LUT.h"
-#include <omp.h>
 
 int main(int argc, char* argv[]){
 	if(argc < 4){

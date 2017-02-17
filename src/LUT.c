@@ -94,26 +94,33 @@ void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	 */
 
 	if(y+r >= 0 && y+r < f.H){
-		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+		memcpy(Ty.arr[r][0], f.img[y + r], Ty.X);
 	} else {
 		memset(Ty.arr[r][0], 0, Ty.X);
 	}
 
 	for(i=1;i<SE.Lnum;i++){
-		d = SE.R[i] - SE.R[i-1];
+		d = SE.R[i] - SE.R[i - 1];
 		simdMin(Ty.arr[r][i],
-			Ty.arr[r][i-1], Ty.arr[r][i-1] + d,
+			Ty.arr[r][i - 1], Ty.arr[r][i - 1] + d,
 			MAX((int)Ty.X - (int)d, 0));
 	}
 }
 
 void updateMinLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t num){
+	/*
+	 * When running in an OpenMP context, pointer swapping must be atomic.
+	 */
 	#pragma omp single
 	{
 		for(size_t i = 0; i < num; i++)
 			circularSwapPointers(*Ty);
 	}
 
+	/*
+	 * When running in an OpenMP context, the index to update is shifted by the
+	 * thread ID.
+	 */
 	computeMinRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 
@@ -144,27 +151,34 @@ void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	 */
 
 	if(y+r >= 0 && y+r < f.H){
-		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
+		memcpy(Ty.arr[r][0], f.img[y + r], Ty.X);
 	} else {
 		memset(Ty.arr[r][0], 0, Ty.X);
 	}
 
 	for(i=1;i<SE.Lnum;i++){
-		d = SE.R[i] - SE.R[i-1];
-		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX,
+		d = SE.R[i] - SE.R[i - 1];
+		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i - 1] - Ty.padX,
 			Ty.arr[r][i-1] + d - Ty.padX,
 			Ty.X + Ty.padX - d);
-		memcpy(Ty.arr[r][i] + Ty.X - d, Ty.arr[r][i-1] + Ty.X - d, d);
+		memcpy(Ty.arr[r][i] + Ty.X - d, Ty.arr[r][i - 1] + Ty.X - d, d);
 	}
 }
 
 void updateMaxLUT(image f, LUT* Ty, chordSet SE, size_t y, size_t tid, size_t num){
+	/*
+	 * When running in an OpenMP context, pointer swapping must be atomic.
+	 */
 	#pragma omp single
 	{
 		for(size_t i = 0; i < num; i++)
 			circularSwapPointers(*Ty);
 	}
 
+	/*
+	 * When running in an OpenMP context, the index to update is shifted by the
+	 * thread ID.
+	 */
 	computeMaxRow(f, *Ty, SE, Ty->maxR - tid, y);
 }
 

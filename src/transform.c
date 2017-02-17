@@ -20,9 +20,12 @@ void lineErode(image* g, LUT Ty, chordSet SE, int y, size_t tid){
      * minimum pixel value covered by chords in the SE from the lookup table.
      * This is done with some SIMD vector magic.
      */
-    memset(g->img[y],UCHAR_MAX,g->W);
+    memset(g->img[y], UCHAR_MAX, g->W);
 
-    for(size_t c=0;c<SE.size;c++){
+    for(size_t c = 0;c < SE.size;c++){
+        /* Note that the r-index of Ty is shifted by the tid: the lookup table
+         * for one row is a slightly smaller shifted lookup table.
+         */
         simdMinInPlace(g->img[y],
             Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x,
             MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
@@ -36,9 +39,12 @@ void lineDilate(image* g, LUT Ty, chordSet SE, int y, size_t tid){
      * maximum pixel value covered by chords in the SE from the lookup table.
      * This is done with some SIMD vector magic.
      */
-    memset(g->img[y],0,g->W);
+    memset(g->img[y], 0, g->W);
 
-    for(size_t c=0;c<SE.size;c++){
+    for(size_t c = 0;c < SE.size; c++){
+        /* Note that the r-index of Ty is shifted by the tid: the lookup table
+         * for one row is a slightly smaller shifted lookup table.
+         */
         simdMaxInPlace(g->img[y],
             Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x,
             MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
@@ -75,7 +81,7 @@ void erode(image* g, image f, chordSet SE){
             for(size_t y = num; y < ( f.H / num ) * num; y = y + num){
                 #pragma omp barrier
 
-                updateMinLUT(f,&Ty,SE,y, tid, num);
+                updateMinLUT(f, &Ty, SE, y, tid, num);
 
                 #pragma omp barrier
 
@@ -84,10 +90,19 @@ void erode(image* g, image f, chordSet SE){
         }
 
         for(size_t y = (f.H/num)*num; y < f.H; y++){
-            updateMinLUT(f,&Ty,SE, y - num + 1, 0, 1);
+            /*
+             * Annoying boundary behavior: when the last few lines are done
+             * serially, we need to update the LUT it as the first thread ID,
+             * but erode as the last thread ID.
+             */
+            updateMinLUT(f, &Ty, SE, y - num + 1, 0, 1);
             lineErode(g, Ty, SE, y, num - 1);
         }
     } else {
+        /*
+         * If there is only one thread, or not enough lines for all threads,
+         * just fall back to serial computation.
+         */
         lineErode(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
             updateMinLUT(f, &Ty, SE, y, 0, 1);
@@ -128,7 +143,7 @@ void dilate(image* g, image f, chordSet SE){
             for(size_t y = num; y < (f.H/num)*num; y = y + num){
                 #pragma omp barrier
 
-                updateMaxLUT(f,&Ty,SE,y, tid, num);
+                updateMaxLUT(f, &Ty, SE, y, tid, num);
 
                 #pragma omp barrier
 
@@ -137,10 +152,19 @@ void dilate(image* g, image f, chordSet SE){
         }
 
         for(size_t y = (f.H / num) * num; y < f.H; y++){
-            updateMaxLUT(f,&Ty,SE, y - num + 1, 0, 1);
+            /*
+             * Annoying boundary behavior: when the last few lines are done
+             * serially, we need to update the LUT it as the first thread ID,
+             * but erode as the last thread ID.
+             */
+            updateMaxLUT(f, &Ty, SE, y - num + 1, 0, 1);
             lineDilate(g, Ty, SE, y, num - 1);
         }
     } else {
+        /*
+         * If there is only one thread, or not enough lines for all threads,
+         * just fall back to serial computation.
+         */
         lineDilate(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
             updateMaxLUT(f, &Ty, SE, y, 0, 1);
@@ -179,6 +203,10 @@ void close(image* g, image f, chordSet SE){
 }
 
 void whiteTopHat(image* g, image f, chordSet SE){
+    /*
+     * Note that this outputs the transform into f instead of g, we'll work
+     * around that at the I/O level to prevent having to copy stuff over.
+     */
 	open(g, f, SE);
 	imageDiffInPlace(f,*g);
 }
