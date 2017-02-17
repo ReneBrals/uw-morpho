@@ -1,3 +1,7 @@
+/* imagePGM.h
+ * Image file I/O.
+ */
+
 #ifndef _IMGPGM
 #define _IMGPGM
 #include <stdio.h>

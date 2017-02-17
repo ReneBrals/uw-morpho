@@ -1,17 +1,18 @@
+/* LUT.c
+ * Defines the lookup table required by the Urbach-Wilkinson algorithm.
+ */
+ 
 #ifndef _LUT
 #define _LUT
 
 #include "chordSet.h"
 
-#define MIN_LUT 0
-#define MAX_LUT 1
-
 typedef struct {
 	unsigned char *** arr;
 	int minR;
 	int maxR;
-	int I;
-	int X;
+	size_t I;
+	size_t X;
 	int padX;
 } LUT;
 

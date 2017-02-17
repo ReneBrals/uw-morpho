@@ -1,65 +1,63 @@
+/* LUT.c
+ * Functions pertaining to the computation of the lookup table
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
 #include <string.h>
+#include <omp.h>
+#include "safeMalloc.h"
 #include "SIMD.h"
 #include "LUT.h"
-#include <omp.h>
 
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
-void printLUT(LUT Ty){
-	int r, i, x;
-
-	for(r = Ty.minR; r <= Ty.maxR; r++){
-		printf("r = %d:\n",r);
-		for(i = 0; i < Ty.I; i++){
-			printf("\t| %d", Ty.arr[r][i][0]);
-			for(x = 1; x < Ty.X; x++){
-				printf(" %d", Ty.arr[r][i][x]);
-			}
-			printf(" |\n");
-		}
-	}
-}
-
 void allocateLUT(LUT* Ty, chordSet SE){
-	int r,i;
-	int prePadX=0;
+	int r;
+	size_t prePadX = 0, i;
 
+	/*
+	 * The LUT is pre-padded on X. This is needed for dilation, where the
+	 * padding might contain valid information.
+	 */
 	if(SE.minX < 0){
 		prePadX = 0-SE.minX;
 	}
-
 	Ty->padX = prePadX;
 
-	Ty->arr = (unsigned char***)malloc((Ty->maxR-Ty->minR+1) * sizeof(char**));
-	for(r = 0; r < (Ty->maxR-Ty->minR+1); r++){
-		Ty->arr[r] = (unsigned char**)malloc(Ty->I * sizeof(char*));
-		for(i = 0; i < Ty->I ;i++){
-			Ty->arr[r][i] = (unsigned char*)calloc((Ty->X + prePadX),sizeof(char));
+	Ty->arr = (unsigned char***)safeMalloc((Ty->maxR-Ty->minR+1) * sizeof(char**));
+	for(r = 0; r < (Ty->maxR - Ty->minR + 1); r++){
+		Ty->arr[r] = (unsigned char**)safeMalloc(Ty->I * sizeof(char*));
+		for(i = 0; i < Ty->I ; i++){
+			Ty->arr[r][i] = (unsigned char*)safeCalloc((Ty->X + prePadX), sizeof(char));
 
-			//Shifting the X index such that negative indexes correspond to the prepadding.
+			/* Shifting the X index such that negative indices correspond to
+			 * the pre-padding.
+			 */
 			Ty->arr[r][i] = &(Ty->arr[r][i][prePadX]);
 		}
 
 	}
 
-	// Shifting the R index so that it can be accessed from ymin <= r <= ymax
-	// without needing offsets
+	/*
+	 * Shifting the R index so that it can be accessed from ymin <= r <= ymax
+	 * without needing offsets.
+	 */
 	Ty->arr = &(Ty->arr[0 - Ty->minR]); //I'm sorry Valgrind...
 }
 
 void freeLUT(LUT table){
-	int r,i;
+	int r;
+	size_t i;
 
-	//The R index was shifted
+	// The R index was shifted, create a pointer to the original array
 	unsigned char*** rp = &(table.arr[table.minR]);
 
 	for(r=table.minR;r<=table.maxR;r++){
 		for(i=0;i<table.I;i++){
-			//The X index was shifted for padding
+			// The X index was also shifted, for padding purposes.
 			free(table.arr[r][i] - table.padX);
 		}
 		free(table.arr[r]);
@@ -71,6 +69,10 @@ void circularSwapPointers(LUT Ty){
 	unsigned char** Ty0;
 	int r;
 
+	/*
+	 * Swap the pointers to r-indices in a circle. This is useful because
+	 * Ty(r,i,x) = Ty-1(r+1,i,x) for r < ymax.
+	 */
 	if(Ty.maxR - Ty.minR > 0){
 		Ty0 = Ty.arr[Ty.minR];
 
@@ -86,6 +88,11 @@ void circularSwapPointers(LUT Ty){
 void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	size_t i, d;
 
+	/*
+	 * Algorithm II.1 in Urbach-Wilkinson paper.
+	 * Computes lookup table for a single index of r.
+	 */
+
 	if(y+r >= 0 && y+r < f.H){
 		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
 	} else {
@@ -94,7 +101,9 @@ void computeMinRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
-		simdMin(Ty.arr[r][i], Ty.arr[r][i-1], Ty.arr[r][i-1] + d, MAX((int)Ty.X - (int)d, 0));
+		simdMin(Ty.arr[r][i],
+			Ty.arr[r][i-1], Ty.arr[r][i-1] + d,
+			MAX((int)Ty.X - (int)d, 0));
 	}
 }
 
@@ -129,6 +138,11 @@ LUT computeMinLUT(image f, chordSet SE, size_t y, size_t num){
 void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 	size_t i, d;
 
+	/*
+	 * Algorithm II.1 in Urbach-Wilkinson paper.
+	 * Computes lookup table for a single index of r.
+	 */
+
 	if(y+r >= 0 && y+r < f.H){
 		memcpy(Ty.arr[r][0], f.img[y+r], Ty.X);
 	} else {
@@ -137,7 +151,9 @@ void computeMaxRow(image f, LUT Ty, chordSet SE, int r, size_t y){
 
 	for(i=1;i<SE.Lnum;i++){
 		d = SE.R[i] - SE.R[i-1];
-		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX, Ty.arr[r][i-1] + d - Ty.padX, Ty.X + Ty.padX - d);
+		simdMax(Ty.arr[r][i] - Ty.padX, Ty.arr[r][i-1] - Ty.padX,
+			Ty.arr[r][i-1] + d - Ty.padX,
+			Ty.X + Ty.padX - d);
 		memcpy(Ty.arr[r][i] + Ty.X - d, Ty.arr[r][i-1] + Ty.X - d, d);
 	}
 }
@@ -168,4 +184,20 @@ LUT computeMaxLUT(image f, chordSet SE, size_t y, size_t num){
 	}
 
 	return Ty;
+}
+
+void printLUT(LUT Ty){
+	int r;
+	size_t i, x;
+
+	for(r = Ty.minR; r <= Ty.maxR; r++){
+		printf("r = %d:\n",r);
+		for(i = 0; i < Ty.I; i++){
+			printf("\t| %d", Ty.arr[r][i][0]);
+			for(x = 1; x < Ty.X; x++){
+				printf(" %d", Ty.arr[r][i][x]);
+			}
+			printf(" |\n");
+		}
+	}
 }

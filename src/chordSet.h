@@ -1,3 +1,8 @@
+/* chordSet.h
+ * Functions related to decomposing a flat image into a set of chords.
+ * A chord is a run of non-zero pixels in a structuring element.
+ */
+ 
 #ifndef _CSET
 #define _CSET
 

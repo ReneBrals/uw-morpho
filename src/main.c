@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[]){
 	if(argc < 4){
-		printf("usage: uw (erode|dilate|open|close|whitetophat|blacktophat) image.pgm se.pbm\n");
+		printf("usage: uw (erode|dilate|open|close|whitetophat|blacktophat) image_file se_file\n");
 		return 0;
 	}
 
@@ -23,28 +23,30 @@ int main(int argc, char* argv[]){
 
 	g = initImage(f.W, f.H, f.range);
 
-    if(!strcmp(argv[1],"erode")){
+    if(!strcmp(argv[1], "erode")){
 		erode(&g, f, SE);
-    } else if(!strcmp(argv[1],"dilate")){
+		writePGM("out.pgm", g);
+    } else if(!strcmp(argv[1], "dilate")){
         dilate(&g, f, SE);
-    } else if(!strcmp(argv[1],"open")){
+		writePGM("out.pgm", g);
+    } else if(!strcmp(argv[1], "open")){
 		open(&g, f, SE);
-	} else if(!strcmp(argv[1],"close")){
+		writePGM("out.pgm", g);
+	} else if(!strcmp(argv[1], "close")){
 		close(&g, f, SE);
-	} else if(!strcmp(argv[1],"whitetophat")){
-		close(&g, f, SE);
-	} else if(!strcmp(argv[1],"blacktophat")){
-		close(&g, f, SE);
+		writePGM("out.pgm", g);
+	} else if(!strcmp(argv[1], "whitetophat")){
+		whiteTopHat(&g, f, SE);
+		writePGM("out.pgm", f);
+	} else if(!strcmp(argv[1], "blacktophat")){
+		blackTopHat(&g, f, SE);
+		writePGM("out.pgm", g);
 	} else {
-        printf("ERROR: operation '%s' not supported",argv[1]);
+        printf("ERROR: operation '%s' not supported", argv[1]);
     }
 
 	freeImage(f);
-
-	writePGM("out.pgm",g);
-
 	freeChordSet(SE);
-
 	freeImage(g);
 
 	return 0;

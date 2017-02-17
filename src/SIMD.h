@@ -1,3 +1,7 @@
+/* SIMD.c
+ * High-performance vectorized implementations of some simple row operations.
+ */
+
 #ifndef _SIMDMIN
 #define _SIMDMIN
 

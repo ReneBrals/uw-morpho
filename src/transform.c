@@ -1,3 +1,7 @@
+/* transform.c
+ * Morphological transformations on images.
+ */
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,27 +14,47 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 void lineErode(image* g, LUT Ty, chordSet SE, int y, size_t tid){
+    /*
+     * Algorithm II.2 in the Urbach-Wilkinson paper.
+     * Erodes a line by initializing it to 0, then for each pixel finding the
+     * minimum pixel value covered by chords in the SE from the lookup table.
+     * This is done with some SIMD vector magic.
+     */
     memset(g->img[y],UCHAR_MAX,g->W);
+
     for(size_t c=0;c<SE.size;c++){
-        simdMinInPlace(g->img[y], Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
+        simdMinInPlace(g->img[y],
+            Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x,
+            MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
 void lineDilate(image* g, LUT Ty, chordSet SE, int y, size_t tid){
+    /*
+     * Algorithm II.2 in the Urbach-Wilkinson paper.
+     * Dilates a line by initializing it to 0, then for each pixel finding the
+     * maximum pixel value covered by chords in the SE from the lookup table.
+     * This is done with some SIMD vector magic.
+     */
     memset(g->img[y],0,g->W);
+
     for(size_t c=0;c<SE.size;c++){
-        simdMaxInPlace(g->img[y], Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x, MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
+        simdMaxInPlace(g->img[y],
+            Ty.arr[ SE.C[c].y + tid ][ SE.C[c].i ] + SE.C[c].x,
+            MIN( MAX( (int)g->W - SE.C[c].x, 0), g->W));
 	}
 }
 
-void imageDiffInPlace(image f, image g){
-    #pragma omp parallel for
-    for(size_t y = 0;y<f.H;y++){
-        simdSubInPlace(f.img[y],g.img[y],f.W);
-    }
-}
-
 void erode(image* g, image f, chordSet SE){
+    /*
+     * Algorithm II.3 in the Urbach-Wilkinson paper.
+     * Computes the erosion g = erode(f,SE).
+     *
+     * This implementation is parallelized in strides: the lookup table contains
+     * additional r-indices such that multiple consecutive lines can be eroded
+     * in parallel.
+     */
+
 	size_t num;
 	#pragma omp parallel
 	{
@@ -48,7 +72,7 @@ void erode(image* g, image f, chordSet SE){
             int tid = omp_get_thread_num();
 
             lineErode(g, Ty, SE, tid, tid);
-            for(size_t y = num; y < (f.H/num)*num; y = y + num){
+            for(size_t y = num; y < ( f.H / num ) * num; y = y + num){
                 #pragma omp barrier
 
                 updateMinLUT(f,&Ty,SE,y, tid, num);
@@ -60,13 +84,13 @@ void erode(image* g, image f, chordSet SE){
         }
 
         for(size_t y = (f.H/num)*num; y < f.H; y++){
-            updateMinLUT(f,&Ty,SE, y-num+1, 0, 1);
-            lineErode(g, Ty, SE, y, num-1);
+            updateMinLUT(f,&Ty,SE, y - num + 1, 0, 1);
+            lineErode(g, Ty, SE, y, num - 1);
         }
     } else {
         lineErode(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
-            updateMinLUT(f,&Ty,SE,y, 0, 1);
+            updateMinLUT(f, &Ty, SE, y, 0, 1);
             lineErode(g, Ty, SE, y, 0);
         }
     }
@@ -75,6 +99,14 @@ void erode(image* g, image f, chordSet SE){
 }
 
 void dilate(image* g, image f, chordSet SE){
+    /*
+     * Algorithm II.3 in the Urbach-Wilkinson paper.
+     * Computes the dilation g = dilate(f,SE).
+     *
+     * This implementation is parallelized in strides: the lookup table contains
+     * additional r-indices such that multiple consecutive lines can be dilated
+     * in parallel.
+     */
 
 	size_t num;
 	#pragma omp parallel
@@ -104,14 +136,14 @@ void dilate(image* g, image f, chordSet SE){
             }
         }
 
-        for(size_t y = (f.H/num)*num; y < f.H; y++){
-            updateMaxLUT(f,&Ty,SE, y-num+1, 0, 1);
-            lineDilate(g, Ty, SE, y, num-1);
+        for(size_t y = (f.H / num) * num; y < f.H; y++){
+            updateMaxLUT(f,&Ty,SE, y - num + 1, 0, 1);
+            lineDilate(g, Ty, SE, y, num - 1);
         }
     } else {
         lineDilate(g, Ty, SE, 0, 0);
         for(size_t y = 1; y < f.H; y++){
-            updateMaxLUT(f,&Ty,SE,y, 0, 1);
+            updateMaxLUT(f, &Ty, SE, y, 0, 1);
             lineDilate(g, Ty, SE, y, 0);
         }
     }
@@ -119,9 +151,20 @@ void dilate(image* g, image f, chordSet SE){
     freeLUT(Ty);
 }
 
+void imageDiffInPlace(image f, image g){
+    #pragma omp parallel for
+    for(size_t y = 0;y<f.H;y++){
+        simdSubInPlace(f.img[y],g.img[y],f.W);
+    }
+}
+
+/*
+ * Some additional operations that are easily expressed using erosion/dilation.
+ */
+
 void open(image* g, image f, chordSet SE){
     erode(g, f, SE);
-    image h = initImage(f.W,f.H,f.range);
+    image h = initImage(f.W, f.H, f.range);
     dilate(&h, *g, SE);
     freeImage(*g);
     *g = h;
@@ -129,18 +172,18 @@ void open(image* g, image f, chordSet SE){
 
 void close(image* g, image f, chordSet SE){
     dilate(g, f, SE);
-    image h = initImage(f.W,f.H,f.range);
+    image h = initImage(f.W, f.H, f.range);
     erode(&h, *g, SE);
     freeImage(*g);
     *g = h;
 }
 
 void whiteTopHat(image* g, image f, chordSet SE){
-	open(g, f,SE);
+	open(g, f, SE);
 	imageDiffInPlace(f,*g);
 }
 
 void blackTopHat(image* g, image f, chordSet SE){
-    close(g, f,SE);
-	imageDiffInPlace(f,*g);
+    close(g, f, SE);
+	imageDiffInPlace(*g, f);
 }

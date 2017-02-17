@@ -1,3 +1,7 @@
+/* transform.h
+ * Morphological transformations on images.
+ */
+
 #ifndef _UWTRANSFORM
 #define _UWTRANSFORM
 

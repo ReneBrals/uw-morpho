@@ -10,7 +10,7 @@
 #include "unistd.h"
 
 #define N 1
-#define SE_SIZE 200
+#define SE_SIZE 100
 
 #ifdef __AVX2__
 #define VECTORIZED 32

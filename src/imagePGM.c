@@ -1,26 +1,29 @@
+/* imagePGM.c
+ * Image file I/O.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
-#include "imagePGM.h"
 #include <limits.h>
 #include "unistd.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-//TODO: max range isn't always 255, CHAR does not always work
+#include "safeMalloc.h"
+#include "imagePGM.h"
 
 void allocateImage(image* imp){
-
-    imp->bytes = (unsigned char*)calloc((imp->H) * (imp->W), sizeof(char));
-    imp->img = (unsigned char**)malloc((imp->H) * sizeof(char*));
+    /*
+     * An image is stored as a contiguous 2D array with a 1D set of pointers in
+     * front of it to allow for f.img[y][x] accessing.
+     */
+    imp->bytes = (unsigned char*)safeCalloc((imp->H) * (imp->W), sizeof(char));
+    imp->img = (unsigned char**)safeMalloc((imp->H) * sizeof(char*));
 
     for(size_t i = 0; i < (imp->H); i++){
         imp->img[i] = (imp->bytes + i*(imp->W));
-
-        assert(imp->img[i] != NULL);
     }
 }
 
@@ -30,6 +33,9 @@ void freeImage(image imp){
 }
 
 image initImage(size_t w, size_t h, size_t range){
+    /*
+     * Allocate an empty image
+     */
     image g;
     g.W = w;
     g.H = h;
@@ -38,19 +44,23 @@ image initImage(size_t w, size_t h, size_t range){
     return g;
 }
 
-image initImagePreallocated(unsigned char* x, size_t w, size_t h, size_t range){
+image initImagePreallocated(unsigned char* buf, size_t w, size_t h, size_t range){
+    /*
+     * This init takes a character buffer. This is needed if the image is used
+     * as a direct output, which is the case if the program gets used in
+     * MATLAB. This is also needed if the image is already loaded into a buffer,
+     * like when the image gets loaded by stb_image.
+     */
     image g;
     g.W = w;
     g.H = h;
     g.range = 255;
-    g.bytes = x;
+    g.bytes = buf;
 
-    g.img = (unsigned char**)malloc((g.H) * sizeof(char*));
+    g.img = (unsigned char**)safeMalloc((g.H) * sizeof(char*));
 
     for(size_t i = 0; i < (g.H); i++){
         g.img[i] = (g.bytes + i*(g.W));
-
-        assert(g.img[i] != NULL);
     }
     return g;
 }
@@ -64,6 +74,10 @@ image readImage(const char* filename){
     }
 
     if(strstr(filename,".pgm") != NULL){
+        /*
+         * stb_image.h can only read binary PGMs, while readPGM can also read
+         * ASCII PGMs.
+         */
         return readPGM(filename);
     } else {
         unsigned char* data = stbi_load(filename,&x,&y,&n,1);
@@ -150,12 +164,14 @@ image readPGM(const char* filename){
     }
 
     fclose(ifp);
-
-    //printf("???\n");
     return im;
 }
 
 void writePGM(const char* filename, image im){
+    /*
+     * Writes to an ASCII PGM, which is easily human-readable for debugging
+     * purposes.
+     */
     FILE* ofp = fopen(filename,"w");
 
     size_t x,y;
@@ -171,6 +187,10 @@ void writePGM(const char* filename, image im){
 
     fclose(ofp);
 }
+
+/*
+ * Some functions which generate images of various shapes
+ */
 
 image disk(int d){
     image im;
