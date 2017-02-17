@@ -12,17 +12,19 @@ Makes use of vector intrinsics and OpenMP to increase performance.
 
 `make slow` if CPU does not support SSE2.
 
+By default, the program will transform lines in stride to achieve parallelism. To split the image in blocks instead, compile with `make split`, `make splitfast` or `make splitslow`.
+
 ### MATLAB MEX file
 
 Execute the `build_uw_morpho.m` script within MATLAB.
-
-
 
 ## Usage
 
 ### Standalone program
 
-2D operations: `./uw2d (erode|dilate|open|close) image.pgm SE.pbm`
+2D operations: `./uw2d (erode|dilate|open|close) image_file SE_file`
+
+Supports 2D images in JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC, PNM, PPM and PGM file formats.
 
 3D operations: `./uw3d (erode|dilate|open|close) image.p3m SE.p3m`
 
