@@ -39,4 +39,16 @@ An additional program to generate image files to use as structuring element is p
 
 **Supports uint8 only**
 
+# Understanding the source code
+
+**main.c** Main program, handles I/O.
+
+**transform.c** Morphological transformations.
+
+**LUT.C** Computation of lookup table.
+
+**chordSet.c** Decomposition of structuring element into set of chords.
+
+**ImagePGM.c** Image file I/O.
+
 <sup>1. Erik R. Urbach, Michael H. F. Wilkinson, "Efficient 2-D Grayscale Morphological Transformations With Arbitrary Flat Structuring Elements", Image Processing IEEE Transactions on, vol. 17, pp. 1-8, 2008, ISSN 1057-7149. IEEE. https://doi.org/10.1109/TIP.2007.912582</sup>
