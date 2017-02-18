@@ -266,7 +266,7 @@ image checkerboard(int d){
 
     for(y=0;y<im.H;y++){
         for(x=0;x<im.W;x++){
-            im.img[y][x] = (x+y % 2 == 0);
+            im.img[y][x] = ((x+y) % 2 == 0);
         }
     }
 
