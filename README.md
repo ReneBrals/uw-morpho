@@ -28,9 +28,14 @@ Supports 2D images in JPG, PNG, TGA, BMP, PSD, GIF, HDR, PIC, PNM, PPM and PGM f
 
 3D operations: `./uw3d (erode|dilate|open|close) image.p3m SE.p3m`
 
+
+An additional program to generate image files to use as structuring element is provided:
+
+`./se_gen (disk|rectangle|h|checkerboard|noise) diameter`
+
 ### MATLAB
 
-`erode(f,SE)`, `dilate(f,SE)`, `open(f,SE)` and `close(f,SE)`
+`erode(f,SE)`, `dilate(f,SE)`, `open(f,SE)` and `close(f,SE)`.
 
 **Supports uint8 only**
 
